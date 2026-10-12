@@ -1,0 +1,21 @@
+{
+  "version": "v2",
+  "fecha": "2026-10-12",
+  "sklearn": "1.6.1",
+  "features": [
+    "games_diff",
+    "ace_diff",
+    "df_diff",
+    "ue_diff",
+    "bp_won_diff",
+    "bp_ratio_diff",
+    "saque_p1",
+    "games_total",
+    "pts_jugados"
+  ],
+  "calibrado": false,
+  "sets": 1450,
+  "partidos": 497,
+  "auc_test": 0.7853832989178153,
+  "brier_test": 0.1856505765541772
+}
