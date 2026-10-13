@@ -1,0 +1,24 @@
+{
+  "version": "v2",
+  "fecha": "2026-10-13",
+  "sklearn": "1.6.1",
+  "algoritmo": "Regresion logistica multiclase (class_weight=balanced)",
+  "features": [
+    "Var_Ansiedad_Total",
+    "Var_Momentum_Neto",
+    "Var_Fortaleza_Total",
+    "Var_Concentracion_Total"
+  ],
+  "clases": [
+    "Crítico",
+    "En riesgo",
+    "Estable",
+    "Óptimo"
+  ],
+  "registros": 296,
+  "tenistas": 20,
+  "validacion": "StratifiedGroupKFold(5) agrupado por tenista",
+  "accuracy_cv": 0.9256756756756757,
+  "f1_macro_cv": 0.8925253567324817,
+  "recall_critico_cv": 1.0
+}
