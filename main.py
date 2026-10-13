@@ -7,15 +7,17 @@ Cumplimiento: RF-03, RF-04, RF-05, RF-06 y RNF-01 (< 2 segundos)
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import db_models  # noqa: F401  (registra las tablas en Base)
 from database import Base, engine
+from db_models import Usuario
 from inferencia import (META_PSI, META_SET, EvaluacionPsicologicaInput,
                         TelemetriaSetInput, estimar_set, evaluar_psicologia)
 from rutas_auth import router as auth_router
 from rutas_tenistas import router as tenistas_router
+from seguridad import usuario_actual
 
 
 @asynccontextmanager
@@ -55,13 +57,13 @@ def health_check():
     }
 
 
-# Endpoints de cálculo sin guardar datos (se protegerán con sesión en el siguiente paso,
-# junto con el inicio de sesión del frontend).
+# Endpoints de cálculo sin guardar datos: requieren sesión iniciada.
 @app.post("/api/evaluacion/clasificar")
-def clasificar_estado_psicologico(data: EvaluacionPsicologicaInput):
+def clasificar_estado_psicologico(data: EvaluacionPsicologicaInput,
+                                  _: Usuario = Depends(usuario_actual)):
     return evaluar_psicologia(data, id_tenista=data.id_tenista)
 
 
 @app.post("/api/partido/probabilidad-set")
-def estimar_probabilidad_set(data: TelemetriaSetInput):
+def estimar_probabilidad_set(data: TelemetriaSetInput, _: Usuario = Depends(usuario_actual)):
     return estimar_set(data)
