@@ -80,6 +80,10 @@ class TelemetriaSetInput(BaseModel):
             raise ValueError("Break points ganados (Rival) no puede superar los totales")
         if self.puntos_totales_disputados < self.p1_juegos + self.p2_juegos:
             raise ValueError("Los puntos jugados no pueden ser menos que los juegos disputados")
+        if self.p1_break_points_ganados > self.p1_juegos:
+            raise ValueError("Los quiebres de J1 no pueden superar sus juegos ganados")
+        if self.p2_break_points_ganados > self.p2_juegos:
+            raise ValueError("Los quiebres del Rival no pueden superar sus juegos ganados")
         return self
 
 # ==============================================================================
