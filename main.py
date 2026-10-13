@@ -29,14 +29,19 @@ app.add_middleware(
 )
 
 # Cargar los modelos serializados (si falta algún archivo, el servidor no arranca)
-modelo_psi = joblib.load("modelo_estado_psicologico.joblib")
-modelo_set = joblib.load("modelo_prediccion_set_v2.joblib")
-with open("modelo_prediccion_set_v2.json", encoding="utf-8") as f:
-    META_SET = json.load(f)
-FEATURES_SET = META_SET["features"]  # fuente única del orden de variables del Modelo B
-if META_SET.get("sklearn") != sklearn.__version__:
-    print(f" Aviso: modelo entrenado con scikit-learn {META_SET.get('sklearn')}, "
-          f"servidor usa {sklearn.__version__}")
+def cargar_modelo(nombre):
+    modelo = joblib.load(f"{nombre}.joblib")
+    with open(f"{nombre}.json", encoding="utf-8") as f:
+        meta = json.load(f)
+    if meta.get("sklearn") != sklearn.__version__:
+        print(f" Aviso: {nombre} entrenado con scikit-learn {meta.get('sklearn')}, "
+              f"servidor usa {sklearn.__version__}")
+    return modelo, meta
+
+modelo_psi, META_PSI = cargar_modelo("modelo_estado_psicologico_v2")
+modelo_set, META_SET = cargar_modelo("modelo_prediccion_set_v2")
+FEATURES_PSI = META_PSI["features"]  # fuente única del orden de variables
+FEATURES_SET = META_SET["features"]
 print(" Modelos cargados correctamente en memoria.")
 
 # ==============================================================================
@@ -80,10 +85,6 @@ class TelemetriaSetInput(BaseModel):
             raise ValueError("Break points ganados (Rival) no puede superar los totales")
         if self.puntos_totales_disputados < self.p1_juegos + self.p2_juegos:
             raise ValueError("Los puntos jugados no pueden ser menos que los juegos disputados")
-        if self.p1_break_points_ganados > self.p1_juegos:
-            raise ValueError("Los quiebres de J1 no pueden superar sus juegos ganados")
-        if self.p2_break_points_ganados > self.p2_juegos:
-            raise ValueError("Los quiebres del Rival no pueden superar sus juegos ganados")
         return self
 
 # ==============================================================================
@@ -95,26 +96,30 @@ def health_check():
 
 @app.post("/api/evaluacion/clasificar")
 def clasificar_estado_psicologico(data: EvaluacionPsicologicaInput):
-    # Cálculo automático de variables consolidadas (RF-03)
-    var_ansiedad_total = (data.score_ansiedad_cog + data.score_ansiedad_som + (6.0 - data.score_autoconfianza)) / 3.0
+    # Variables consolidadas (RF-03): fórmulas idénticas a las del dataset de entrenamiento
+    var_ansiedad_total = (5 * data.score_ansiedad_cog + 3 * data.score_ansiedad_som) / 8.0
     var_momentum_neto = data.score_momentum_pos - data.score_momentum_neg
     var_fortaleza_total = (data.score_resiliencia + data.score_ctrl_emocional + data.score_perseverancia) / 3.0
-    var_concentracion_total = (data.score_foco_atencional + data.score_rutinas_conc) / 2.0
+    var_concentracion_total = (2 * data.score_foco_atencional + 4 * data.score_rutinas_conc) / 6.0
 
-    # Vector de entrada idéntico al entrenado
-    vector_entrada = np.array([[
-        data.score_ansiedad_cog, data.score_ansiedad_som, data.score_autoconfianza,
-        data.score_momentum_pos, data.score_momentum_neg, data.score_resiliencia,
-        data.score_ctrl_emocional, data.score_foco_atencional, data.score_perseverancia,
-        data.score_rutinas_conc, var_ansiedad_total, var_momentum_neto,
-        var_fortaleza_total, var_concentracion_total
-    ]])
+    caracteristicas = {
+        "Var_Ansiedad_Total": var_ansiedad_total,
+        "Var_Momentum_Neto": var_momentum_neto,
+        "Var_Fortaleza_Total": var_fortaleza_total,
+        "Var_Concentracion_Total": var_concentracion_total,
+    }
+    vector_entrada = pd.DataFrame([caracteristicas], columns=FEATURES_PSI)
 
     # Inferencia del modelo de IA (RF-04)
-    estado_predicho = modelo_psi.predict(vector_entrada)[0]
     probabilidades = modelo_psi.predict_proba(vector_entrada)[0]
     clases = list(modelo_psi.classes_)
-    confianza = round(float(np.max(probabilidades)) * 100, 2)
+    idx = int(np.argmax(probabilidades))
+    estado_predicho = clases[idx]
+    confianza = round(float(probabilidades[idx]) * 100, 2)
+    prob_por_clase = {
+        c: round(float(probabilidades[clases.index(c)]) * 100, 1)
+        for c in ("Óptimo", "Estable", "En riesgo", "Crítico") if c in clases
+    }
 
     # Generación de recomendación de intervención (RF-05) basada en literatura
     if estado_predicho == 'Óptimo':
@@ -146,6 +151,8 @@ def clasificar_estado_psicologico(data: EvaluacionPsicologicaInput):
         "confianza_prediccion_pct": confianza,
         "alerta_activa": alerta,
         "recomendacion_entrenador": recomendacion,
+        "probabilidades_por_clase_pct": prob_por_clase,
+        "modelo_version": META_PSI.get("version", "v2"),
         "metricas_consolidadas": {
             "ansiedad_total": round(var_ansiedad_total, 2),
             "momentum_neto": round(var_momentum_neto, 2),
