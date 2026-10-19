@@ -1,5 +1,7 @@
 import os, sqlite3
 os.environ.update(DATABASE_URL="sqlite:///./prueba.db", SECRET_KEY="x"*48, CODIGO_INVITACION="invitame", ADMIN_EMAIL="admin@ejemplo.com")
+if os.path.exists("prueba.db"):
+    os.remove("prueba.db")  # empezar siempre con una base limpia
 from fastapi.testclient import TestClient
 import main
 from sqlalchemy import text
