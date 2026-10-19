@@ -1,0 +1,16 @@
+# Secretos y entorno
+.env
+.env.*
+
+# Base de datos de prueba
+prueba.db
+*.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Datos personales (el dataset nunca se sube)
+*.xlsx
