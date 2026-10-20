@@ -21,7 +21,7 @@ def cargar_modelo(nombre):
               f"servidor usa {sklearn.__version__}")
     return modelo, meta
 
-modelo_psi, META_PSI = cargar_modelo("modelo_estado_psicologico_v2")
+modelo_psi, META_PSI = cargar_modelo("modelo_estado_psicologico_v3")
 modelo_set, META_SET = cargar_modelo("modelo_prediccion_set_v2")
 FEATURES_PSI = META_PSI["features"]  # fuente única del orden de variables
 FEATURES_SET = META_SET["features"]
@@ -81,7 +81,7 @@ def evaluar_psicologia(data: PuntajesPsicologicos, id_tenista: str = "T01") -> d
     var_ansiedad_total = (5 * data.score_ansiedad_cog + 3 * data.score_ansiedad_som) / 8.0
     var_momentum_neto = data.score_momentum_pos - data.score_momentum_neg
     var_fortaleza_total = (data.score_resiliencia + data.score_ctrl_emocional + data.score_perseverancia) / 3.0
-    var_concentracion_total = (2 * data.score_foco_atencional + 4 * data.score_rutinas_conc) / 6.0
+    var_concentracion_total = (4 * data.score_foco_atencional + 2 * data.score_rutinas_conc) / 6.0
 
     caracteristicas = {
         "Var_Ansiedad_Total": var_ansiedad_total,

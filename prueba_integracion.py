@@ -1,7 +1,5 @@
 import os, sqlite3
 os.environ.update(DATABASE_URL="sqlite:///./prueba.db", SECRET_KEY="x"*48, CODIGO_INVITACION="invitame", ADMIN_EMAIL="admin@ejemplo.com")
-if os.path.exists("prueba.db"):
-    os.remove("prueba.db")  # empezar siempre con una base limpia
 from fastapi.testclient import TestClient
 import main
 from sqlalchemy import text
@@ -12,9 +10,9 @@ def chk(nombre, cond):
     assert cond, nombre
 
 with TestClient(main.app) as c:
-    # --- salud y cálculo sin sesión (siguen abiertos) ---
+    # --- salud (público) y cálculo (requiere sesión) ---
     chk("health", c.get("/").json()["status"]=="online")
-    chk("cálculo set público", c.post("/api/partido/probabilidad-set", json={"puntos_totales_disputados":30}).status_code==200)
+    chk("cálculo set sin sesión 401", c.post("/api/partido/probabilidad-set", json={"puntos_totales_disputados":30}).status_code==401)
     # --- registro / login ---
     chk("registro sin código correcto 403", c.post("/api/auth/registro", json={"email":"a@b.co","password":"clave-larga-123","codigo_invitacion":"mal"}).status_code==403)
     chk("contraseña corta 422", c.post("/api/auth/registro", json={"email":"a@b.co","password":"corta","codigo_invitacion":"invitame"}).status_code==422)
@@ -29,6 +27,9 @@ with TestClient(main.app) as c:
     h1,h2,ha=login("entrenador1@ejemplo.com"),login("entrenador2@ejemplo.com"),login("admin@ejemplo.com")
     chk("sin token 401", c.get("/api/tenistas").status_code==401)
     chk("token falso 401", c.get("/api/tenistas", headers={"Authorization":"Bearer xxx"}).status_code==401)
+    chk("cálculo set con sesión 200", c.post("/api/partido/probabilidad-set", headers=h1, json={"puntos_totales_disputados":30}).status_code==200)
+    chk("cálculo psicológico con sesión 200", c.post("/api/evaluacion/clasificar", headers=h1, json=dict(score_ansiedad_cog=3,score_ansiedad_som=3,score_autoconfianza=3,score_momentum_pos=3,score_momentum_neg=3,score_resiliencia=3,score_ctrl_emocional=3,score_foco_atencional=3,score_perseverancia=3,score_rutinas_conc=3)).status_code==200)
+    chk("cálculo psicológico sin sesión 401", c.post("/api/evaluacion/clasificar", json=dict(score_ansiedad_cog=3,score_ansiedad_som=3,score_autoconfianza=3,score_momentum_pos=3,score_momentum_neg=3,score_resiliencia=3,score_ctrl_emocional=3,score_foco_atencional=3,score_perseverancia=3,score_rutinas_conc=3)).status_code==401)
     chk("/auth/yo", c.get("/api/auth/yo", headers=h1).json()["email"]=="entrenador1@ejemplo.com")
     # --- jugadores ---
     adulto=c.post("/api/tenistas", headers=h1, json={"codigo":"T01","anio_nacimiento":1998,"nivel":"Federado"}).json()
@@ -48,7 +49,7 @@ with TestClient(main.app) as c:
     # --- evaluaciones ---
     r=c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1, json=P); chk("evaluación guardada 201", r.status_code==201 and r.json()["estado_psicologico"]=="Óptimo")
     chk("evaluación fuera de rango 422", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1, json=dict(P,score_ansiedad_cog=6)).status_code==422)
-    lst=c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json(); chk("historial con 1 evaluación", len(lst)==1 and lst[0]["modelo_version"]=="v2")
+    lst=c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json(); chk("historial con 1 evaluación", len(lst)==1 and lst[0]["modelo_version"]=="v3")
     # --- aislamiento entre entrenadores y admin ---
     chk("otro entrenador no ve al jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2).status_code==404)
     chk("otro entrenador no puede evaluar (404)", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2, json=P).status_code==404)
