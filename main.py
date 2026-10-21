@@ -18,6 +18,7 @@ from inferencia import (META_PSI, META_SET, EvaluacionPsicologicaInput,
 from combinada import LecturaCombinadaIn, lectura_combinada
 from items_instrumento import ClasificarItemsInput, evaluar_items
 from rutas_auth import router as auth_router
+from rutas_observacion import router as observacion_router
 from rutas_tenistas import router as tenistas_router
 from seguridad import usuario_actual
 
@@ -48,6 +49,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(tenistas_router)
+app.include_router(observacion_router)
 
 
 @app.get("/")

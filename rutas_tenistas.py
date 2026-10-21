@@ -215,6 +215,16 @@ def crear_partido(tenista_id: int, datos: PartidoIn, db: Session = Depends(get_d
             "torneo": p.torneo, "superficie": p.superficie}
 
 
+@router.get("/tenistas/{tenista_id}/partidos")
+def listar_partidos(tenista_id: int, db: Session = Depends(get_db),
+                    usuario: Usuario = Depends(usuario_actual)):
+    t = _tenista_o_404(db, tenista_id, usuario)
+    filas = db.scalars(select(Partido).where(Partido.tenista_id == t.id)
+                       .order_by(Partido.id.desc()).limit(100)).all()
+    return [{"id": p.id, "fecha": p.fecha, "rival_codigo": p.rival_codigo, "torneo": p.torneo,
+             "superficie": p.superficie} for p in filas]
+
+
 def _partido_o_404(db: Session, partido_id: int, usuario: Usuario) -> Partido:
     p = db.get(Partido, partido_id)
     if p is None:

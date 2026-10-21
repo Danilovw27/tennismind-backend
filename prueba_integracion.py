@@ -38,6 +38,30 @@ baja = cb.combinar("Estable", None, set_falso("Muestra insuficiente (menos de 10
 chk("RF-06: con confiabilidad Baja no se usa la lectura del set", "confiable" in baja["lectura"] and baja["prioridad"] == "Baja")
 chk("RF-06: momentum neto <= -1 agrega nota", len(cb.combinar("Estable", -1.5, set_falso(DIAGS[1]))["notas"]) == 1 and cb.combinar("Estable", 0.5, set_falso(DIAGS[1]))["notas"] == [])
 
+# --- RF-02: Instrumento 2 (observación del entrenador), sin servidor ---
+import instrumento_observacion as io
+OBS = json.load(open(AQUI / "items_observacion.json", encoding="utf-8"))
+chk("RF-02: secciones A=1-8, B=9-23, C=24-30 y los 30 ítems una sola vez",
+    {k: (min(v), max(v)) for k, v in io.SECCIONES.items()} == {"A": (1, 8), "B": (9, 23), "C": (24, 30)}
+    and sorted(i["numero"] for i in OBS["items"]) == list(range(1, 31)))
+chk("RF-02: solo el ítem 21 es inverso", [i["numero"] for i in OBS["items"] if i["inverso"]] == [21])
+chk("RF-02: ítems 26-30 son globales y no tienen puntaje",
+    [i["numero"] for i in OBS["items"] if i["puntaje"] is None] == [26, 27, 28, 29, 30])
+chk("RF-02: 6 alertas R1-R6 y 4 preguntas A-D", list(io.ALERTAS) == [f"R{i}" for i in range(1, 7)] and list(io.PREGUNTAS) == list("ABCD"))
+def resp(sec, **cambios):
+    r = {n: 3 for n in io.SECCIONES[sec]}
+    r.update({int(k[1:]): v for k, v in cambios.items()}); return r
+chk("RF-02: ítem 21 invertido en Foco ((3+3+(6-5))/3)", abs(io.calcular_puntajes("B", resp("B", i21=5))["score_foco_atencional"] - 7 / 3) <= 1e-9)
+chk("RF-02: ítem 21 con valor 1 suma 5 al Foco", abs(io.calcular_puntajes("B", resp("B", i21=1))["score_foco_atencional"] - 11 / 3) <= 1e-9)
+chk("RF-02: sección A calcula Cog, Som y Autoconfianza",
+    set(io.calcular_puntajes("A", resp("A"))) == {"score_ansiedad_cog", "score_ansiedad_som", "score_autoconfianza"})
+chk("RF-02: sección B calcula 6 dimensiones", len(io.calcular_puntajes("B", resp("B"))) == 6)
+chk("RF-02: sección C solo calcula Perseverancia (ítems 26-30 no se promedian)",
+    io.calcular_puntajes("C", resp("C", i29=5, i26=1)) == {"score_perseverancia": 3.0})
+chk("RF-02: promedio simple de Ansiedad Cognitiva (ítems 1-3)", io.calcular_puntajes("A", resp("A", i1=5, i2=1, i3=3))["score_ansiedad_cog"] == 3.0)
+chk("RF-02: riesgo por alerta R o por ítem 29 >= 4",
+    io.hay_riesgo({"29": 2}, ["R3"]) and io.hay_riesgo({"29": 4}, []) and not io.hay_riesgo({"29": 3}, []))
+
 # --- RF-01 (a): los 30 ítems quedan asignados exactamente una vez ---
 asignados = [i["numero"] for i in ITEMS_JSON]
 chk("items.json: ítems 1..30 sin repetir ni faltar", sorted(asignados) == list(range(1, 31)))
@@ -131,6 +155,53 @@ with TestClient(main.app) as c:
         and d["fuentes"]["probabilidad_ganar_set_p1"] == ref["probabilidad_ganar_set_p1"] and d["recomendacion_combinada"] and d["notas"])
     r = c.post("/api/recomendacion-combinada", headers=h1, json=dict(cuerpo, telemetria={"puntos_totales_disputados": 5}))
     chk("combinada con pocos puntos: confiabilidad Baja", r.status_code == 200 and r.json()["fuentes"]["nivel_confiabilidad"] == "Baja")
+    # --- RF-02: observación del entrenador ---
+    po = c.post(f"/api/tenistas/{adulto['id']}/partidos", headers=h1, json={"rival_codigo": "R02", "torneo": "Obs"}).json()
+    def cuerpo(sec, **extra):
+        d = {"seccion": sec, "respuestas": {str(n): 3 for n in io.SECCIONES[sec]}}; d.update(extra); return d
+    URL = f"/api/partidos/{po['id']}/observaciones"
+    chk("observación sin sesión 401", c.post(URL, json=cuerpo("A")).status_code == 401)
+    r = c.post(URL, headers=h1, json=cuerpo("A", notas={"1": "  se le vio nervioso  ", "2": "   "}, analisis={"A": "motivado"}))
+    chk("observación A guardada 201 con puntajes", r.status_code == 201 and set(r.json()["puntajes"]) == {"score_ansiedad_cog", "score_ansiedad_som", "score_autoconfianza"}
+        and r.json()["notas"] == {"1": "se le vio nervioso"} and r.json()["alerta_activa"] is False)
+    chk("segunda sección A 409", c.post(URL, headers=h1, json=cuerpo("A")).status_code == 409)
+    chk("B sin set_numero 422", c.post(URL, headers=h1, json=cuerpo("B")).status_code == 422)
+    chk("A con set_numero 422", c.post(URL, headers=h1, json=cuerpo("A", set_numero=1)).status_code == 422)
+    chk("B set_numero 6 422", c.post(URL, headers=h1, json=cuerpo("B", set_numero=6)).status_code == 422)
+    rb = dict(cuerpo("B", set_numero=1, resultado_set="6-4")); rb["respuestas"]["21"] = 5
+    r = c.post(URL, headers=h1, json=rb)
+    chk("B set 1 guardada: ítem 21 invertido en Foco", r.status_code == 201 and abs(r.json()["puntajes"]["score_foco_atencional"] - 7 / 3) <= 1e-9
+        and r.json()["analisis"].get("resultado_set") == "6-4" and r.json()["set_numero"] == 1)
+    chk("B del mismo set 409", c.post(URL, headers=h1, json=cuerpo("B", set_numero=1)).status_code == 409)
+    chk("B set 2 201", c.post(URL, headers=h1, json=cuerpo("B", set_numero=2)).status_code == 201)
+    chk("resultado_set inválido 422", c.post(URL, headers=h1, json=cuerpo("B", set_numero=3, resultado_set="ganó Juan")).status_code == 422)
+    falta = cuerpo("C"); del falta["respuestas"]["30"]
+    chk("C con un ítem de menos 422", c.post(URL, headers=h1, json=falta).status_code == 422)
+    chk("A con ítems de la sección B 422", c.post(URL, headers=h1, json={"seccion": "A", "respuestas": {str(n): 3 for n in range(1, 10)}}).status_code == 422)
+    chk("ítem con valor 6 422", c.post(URL, headers=h1, json=cuerpo("C", respuestas={str(n): (6 if n == 24 else 3) for n in range(24, 31)})).status_code == 422)
+    chk("ítem con valor decimal 422", c.post(URL, headers=h1, json=cuerpo("C", respuestas={str(n): (3.5 if n == 24 else 3) for n in range(24, 31)})).status_code == 422)
+    chk("alerta desconocida 422", c.post(URL, headers=h1, json=cuerpo("C", alertas=["R9"])).status_code == 422)
+    chk("alerta repetida 422", c.post(URL, headers=h1, json=cuerpo("C", alertas=["R1", "R1"])).status_code == 422)
+    chk("nota de un ítem de otra sección 422", c.post(URL, headers=h1, json=cuerpo("C", notas={"1": "x"})).status_code == 422)
+    chk("nota de más de 300 caracteres 422", c.post(URL, headers=h1, json=cuerpo("C", notas={"24": "x" * 301})).status_code == 422)
+    chk("pregunta cualitativa inválida 422", c.post(URL, headers=h1, json=cuerpo("C", analisis={"Z": "x"})).status_code == 422)
+    chk("texto cualitativo de más de 1000 caracteres 422", c.post(URL, headers=h1, json=cuerpo("C", analisis={"A": "x" * 1001})).status_code == 422)
+    rc = cuerpo("C", alertas=["R3"], analisis={"A": "bien", "C": "foco"}); rc["respuestas"]["29"] = 5
+    r = c.post(URL, headers=h1, json=rc)
+    chk("C guardada: alertas, ítem 29 y solo Perseverancia", r.status_code == 201 and r.json()["alertas"] == ["R3"] and r.json()["alerta_activa"]
+        and r.json()["puntajes"] == {"score_perseverancia": 3.0} and r.json()["respuestas"]["29"] == 5)
+    chk("segunda sección C 409", c.post(URL, headers=h1, json=cuerpo("C")).status_code == 409)
+    lp = c.get(URL, headers=h1).json()
+    chk("lista de observaciones del partido (A, B1, B2, C)", [(o["seccion"], o["set_numero"]) for o in lp] == [("A", None), ("B", 1), ("B", 2), ("C", None)])
+    lt = c.get(f"/api/tenistas/{adulto['id']}/observaciones", headers=h1).json()
+    chk("lista del jugador con datos del partido", len(lt) == 4 and lt[0]["partido"]["torneo"] == "Obs" and lt[0]["seccion"] == "C")
+    chk("lista de partidos del jugador", [x["id"] for x in c.get(f"/api/tenistas/{adulto['id']}/partidos", headers=h1).json()] == [po["id"]])
+    chk("otro entrenador no puede observar (404)", c.post(URL, headers=h2, json=cuerpo("A")).status_code == 404)
+    chk("otro entrenador no ve observaciones del partido (404)", c.get(URL, headers=h2).status_code == 404)
+    chk("otro entrenador no ve observaciones del jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/observaciones", headers=h2).status_code == 404)
+    chk("otro entrenador no ve partidos del jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/partidos", headers=h2).status_code == 404)
+    chk("admin no lee observaciones del partido (404)", c.get(URL, headers=ha).status_code == 404)
+    chk("admin no lee observaciones del jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/observaciones", headers=ha).status_code == 404)
     # --- aislamiento entre entrenadores y admin ---
     chk("otro entrenador no ve al jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2).status_code==404)
     chk("otro entrenador no puede evaluar (404)", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2, json=P).status_code==404)
@@ -149,12 +220,14 @@ with TestClient(main.app) as c:
     chk("revocar 200", c.post(f"/api/tenistas/{adulto['id']}/consentimiento/revocar", headers=h1).status_code==200)
     chk("tras revocar no guarda 403", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1, json=P).status_code==403)
     chk("tras revocar no guarda mediciones 403", c.post(f"/api/partidos/{p['id']}/mediciones", headers=h1, json={"puntos_totales_disputados":30}).status_code==403)
+    chk("tras revocar no guarda observaciones 403", c.post(f"/api/partidos/{po['id']}/observaciones", headers=h1, json=cuerpo("B", set_numero=3)).status_code==403)
     # --- supresión en cascada ---
     chk("eliminar jugador 204", c.delete(f"/api/tenistas/{adulto['id']}", headers=h1).status_code==204)
     with engine.connect() as cx:
         n=lambda t: cx.execute(text(f"select count(*) from {t}")).scalar()
         chk("cascada: sin evaluaciones", n("evaluaciones_psicologicas")==0)
         chk("cascada: sin partidos ni mediciones", n("partidos")==0 and n("mediciones_set")==0)
+        chk("cascada: sin observaciones del entrenador", n("observaciones_entrenador")==0)
         chk("cascada: sin consentimientos del jugador borrado", n("consentimientos")==1)  # queda solo el del menor
     # --- desactivar usuario invalida su sesión ---
     ids={u["email"]:u["id"] for u in c.get("/api/admin/usuarios", headers=ha).json()}
@@ -162,5 +235,5 @@ with TestClient(main.app) as c:
     chk("sesión de usuario desactivado 401", c.get("/api/auth/yo", headers=h2).status_code==401)
     aud=c.get("/api/admin/auditoria", headers=ha).json()
     acciones={a["accion"] for a in aud}
-    chk("auditoría registra acciones clave", {"registro","login","crear_tenista","registrar_consentimiento","crear_evaluacion","eliminar_tenista","revocar_consentimiento"}<=acciones)
+    chk("auditoría registra acciones clave", {"registro","login","crear_tenista","registrar_consentimiento","crear_evaluacion","eliminar_tenista","revocar_consentimiento","crear_observacion","consultar_observaciones"}<=acciones)
 print("TODO OK")

@@ -51,6 +51,8 @@ class Tenista(Base):
         cascade="all, delete-orphan", passive_deletes=True)
     partidos: Mapped[list["Partido"]] = relationship(
         cascade="all, delete-orphan", passive_deletes=True)
+    observaciones: Mapped[list["ObservacionEntrenador"]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True)
 
 
 class Consentimiento(Base):
@@ -94,6 +96,8 @@ class Partido(Base):
 
     mediciones: Mapped[list["MedicionSet"]] = relationship(
         cascade="all, delete-orphan", passive_deletes=True)
+    observaciones: Mapped[list["ObservacionEntrenador"]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True)
 
 
 class MedicionSet(Base):
@@ -109,6 +113,25 @@ class MedicionSet(Base):
     nivel_confiabilidad: Mapped[str] = mapped_column(String(10))
     diagnostico: Mapped[str] = mapped_column(String(80))
     modelo_version: Mapped[str] = mapped_column(String(20))
+
+
+class ObservacionEntrenador(Base):
+    """RF-02: una sección (A antes, B durante por set, C después) del Instrumento 2."""
+    __tablename__ = "observaciones_entrenador"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenista_id: Mapped[int] = mapped_column(
+        ForeignKey("tenistas.id", ondelete="CASCADE"), index=True)
+    partido_id: Mapped[int] = mapped_column(
+        ForeignKey("partidos.id", ondelete="CASCADE"), index=True)
+    seccion: Mapped[str] = mapped_column(String(1))                    # A | B | C
+    set_numero: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # solo en B
+    respuestas: Mapped[dict] = mapped_column(JSON)                     # {"1": 4, ...}
+    notas: Mapped[dict] = mapped_column(JSON)                          # {"3": "texto", ...}
+    puntajes: Mapped[dict] = mapped_column(JSON)                       # promedio por dimensión
+    alertas: Mapped[list] = mapped_column(JSON)                        # ["R1", ...]
+    analisis: Mapped[dict] = mapped_column(JSON)                       # preguntas cualitativas A-D
+    creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ahora)
 
 
 class Auditoria(Base):

@@ -1,0 +1,412 @@
+{
+ "instrumento": "Instrumento 2 - Guía de Observación Psicológica del entrenador",
+ "fuente": "Instrumento2.docx",
+ "escala": {
+  "min": 1,
+  "max": 5,
+  "etiquetas": {
+   "1": "Nunca",
+   "2": "Raramente",
+   "3": "Ocasionalmente",
+   "4": "Frecuentemente",
+   "5": "Siempre"
+  }
+ },
+ "secciones": {
+  "A": {
+   "momento": "Antes del partido",
+   "instruccion": "Observe al tenista durante los 20 minutos previos al inicio del partido.",
+   "items": [
+    1,
+    8
+   ],
+   "repetible": false
+  },
+  "B": {
+   "momento": "Durante el partido",
+   "instruccion": "Complete esta sección al término de cada set durante los cambios de lado.",
+   "items": [
+    9,
+    23
+   ],
+   "repetible": "por set",
+   "campos": [
+    "set_numero",
+    "resultado_set",
+    "momento_registro"
+   ]
+  },
+  "C": {
+   "momento": "Después del partido",
+   "instruccion": "Evalúe globalmente el comportamiento psicológico del tenista durante todo el encuentro (máximo 30 minutos después).",
+   "items": [
+    24,
+    30
+   ],
+   "repetible": false
+  }
+ },
+ "puntaje_es": "promedio simple de los ítems de su dimensión (ítem 21 invertido); los ítems 26-30 son evaluación global y no se promedian",
+ "items": [
+  {
+   "numero": 1,
+   "seccion": "A",
+   "texto": "El tenista verbaliza preocupación o pensamientos negativos antes de iniciar.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 2,
+   "seccion": "A",
+   "texto": "El tenista muestra dificultad para mantener la atención en las indicaciones del entrenador.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 3,
+   "seccion": "A",
+   "texto": "El tenista pregunta o comenta en exceso sobre posibles errores propios.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 4,
+   "seccion": "A",
+   "texto": "Se observan señales visibles de tensión muscular (rigidez, gestos tensos).",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 5,
+   "seccion": "A",
+   "texto": "El tenista presenta respiración acelerada o entrecortada antes del partido.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 6,
+   "seccion": "A",
+   "texto": "Se observan conductas nerviosas (movimiento excesivo, inquietud postural).",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 7,
+   "seccion": "A",
+   "texto": "El tenista expresa confianza en sus habilidades técnicas antes de salir a la pista.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Autoconfianza",
+   "puntaje": "Score_Autoconfianza",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 8,
+   "seccion": "A",
+   "texto": "El lenguaje corporal del tenista refleja seguridad y determinación.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Autoconfianza",
+   "puntaje": "Score_Autoconfianza",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 9,
+   "seccion": "B",
+   "texto": "El tenista mantiene postura erguida y gestos de afirmación tras puntos ganados.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 10,
+   "seccion": "B",
+   "texto": "El tenista intensifica el ritmo de juego y muestra actitud ofensiva al tener ventaja.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 11,
+   "seccion": "B",
+   "texto": "El tenista celebra los puntos y se comunica de forma positiva consigo mismo.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 12,
+   "seccion": "B",
+   "texto": "El tenista adopta postura encorvada o cabizbaja tras puntos perdidos consecutivos.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 13,
+   "seccion": "B",
+   "texto": "El tenista cambia su estilo de juego hacia una actitud pasiva o defensiva.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 14,
+   "seccion": "B",
+   "texto": "Se observan murmullos, gestos de frustración o expresiones de duda en pista.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 15,
+   "seccion": "B",
+   "texto": "El tenista retoma su postura y concentración rápidamente tras un error grave.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Resiliencia",
+   "puntaje": "Score_Resiliencia",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 16,
+   "seccion": "B",
+   "texto": "El tenista no arrastra el efecto de puntos perdidos en los siguientes intercambios.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Resiliencia",
+   "puntaje": "Score_Resiliencia",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 17,
+   "seccion": "B",
+   "texto": "El tenista controla sus reacciones emocionales visibles (evita raquetazos, gritos).",
+   "variable": "Fortaleza Mental",
+   "dimension": "Control Emocional",
+   "puntaje": "Score_CtrlEmocional",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 18,
+   "seccion": "B",
+   "texto": "El tenista aplica rutinas observables de autorregulación entre puntos.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Control Emocional",
+   "puntaje": "Score_CtrlEmocional",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 19,
+   "seccion": "B",
+   "texto": "El tenista anticipa los movimientos del rival y responde tácticamente.",
+   "variable": "Concentración bajo Presión",
+   "dimension": "Foco Atencional",
+   "puntaje": "Score_FocoAtencional",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 20,
+   "seccion": "B",
+   "texto": "Los ojos del tenista siguen la trayectoria de la pelota de forma consistente.",
+   "variable": "Concentración bajo Presión",
+   "dimension": "Foco Atencional",
+   "puntaje": "Score_FocoAtencional",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 21,
+   "seccion": "B",
+   "texto": "El tenista se ve perturbado por el ruido del público o decisiones arbitrales.",
+   "variable": "Concentración bajo Presión",
+   "dimension": "Foco Atencional",
+   "puntaje": "Score_FocoAtencional",
+   "grupo": "dimension",
+   "inverso": true,
+   "nota": "Redactado en sentido contrario a Foco (valor alto = más perturbación). Se invierte (6 - valor) al calcular el puntaje de Foco."
+  },
+  {
+   "numero": 22,
+   "seccion": "B",
+   "texto": "El tenista aplica una rutina observable antes de cada saque (pausa, bote de pelota, respiración).",
+   "variable": "Concentración bajo Presión",
+   "dimension": "Rutinas de Concentración",
+   "puntaje": "Score_RutinasConc",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 23,
+   "seccion": "B",
+   "texto": "El tenista usa palabras clave o gestos mentales entre puntos.",
+   "variable": "Concentración bajo Presión",
+   "dimension": "Rutinas de Concentración",
+   "puntaje": "Score_RutinasConc",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 24,
+   "seccion": "C",
+   "texto": "El tenista mantuvo el nivel de esfuerzo físico y mental durante todo el partido.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Perseverancia",
+   "puntaje": "Score_Perseverancia",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 25,
+   "seccion": "C",
+   "texto": "El tenista siguió compitiendo con convicción en sets o momentos de desventaja clara.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Perseverancia",
+   "puntaje": "Score_Perseverancia",
+   "grupo": "dimension",
+   "inverso": false
+  },
+  {
+   "numero": 26,
+   "seccion": "C",
+   "texto": "La concentración del tenista fue consistente a lo largo de todo el encuentro.",
+   "variable": "Evaluación global",
+   "dimension": "Evaluación Global Post-Partido",
+   "puntaje": null,
+   "grupo": "global",
+   "inverso": false
+  },
+  {
+   "numero": 27,
+   "seccion": "C",
+   "texto": "El estado psicológico del tenista influyó positivamente en el resultado del partido.",
+   "variable": "Evaluación global",
+   "dimension": "Evaluación Global Post-Partido",
+   "puntaje": null,
+   "grupo": "global",
+   "inverso": false
+  },
+  {
+   "numero": 28,
+   "seccion": "C",
+   "texto": "El tenista aplicó en competición las estrategias mentales trabajadas en entrenamiento.",
+   "variable": "Evaluación global",
+   "dimension": "Evaluación Global Post-Partido",
+   "puntaje": null,
+   "grupo": "global",
+   "inverso": false
+  },
+  {
+   "numero": 29,
+   "seccion": "C",
+   "texto": "Se detectaron señales de riesgo psicológico que requieren intervención (burnout, ansiedad severa).",
+   "variable": "Evaluación global",
+   "dimension": "Evaluación Global Post-Partido",
+   "puntaje": null,
+   "grupo": "global",
+   "inverso": false,
+   "nota": "Indicador de riesgo (valor alto = más riesgo). Pertenece a la evaluación global; no se promedia con otros ítems."
+  },
+  {
+   "numero": 30,
+   "seccion": "C",
+   "texto": "El rendimiento psicológico del tenista en este partido mejoró respecto al anterior.",
+   "variable": "Evaluación global",
+   "dimension": "Evaluación Global Post-Partido",
+   "puntaje": null,
+   "grupo": "global",
+   "inverso": false
+  }
+ ],
+ "alertas_riesgo": [
+  {
+   "id": "R1",
+   "texto": "Llanto o bloqueo emocional visible en pista"
+  },
+  {
+   "id": "R2",
+   "texto": "Abandono de rutinas de juego habituales sin razón táctica"
+  },
+  {
+   "id": "R3",
+   "texto": "Verbalización de pensamientos de rendición o inutilidad"
+  },
+  {
+   "id": "R4",
+   "texto": "Incapacidad para responder a indicaciones del entrenador en tiempo de descanso"
+  },
+  {
+   "id": "R5",
+   "texto": "Reacciones de agresividad desproporcionadas (hacia el rival, árbitro o equipo)"
+  },
+  {
+   "id": "R6",
+   "texto": "Disminución abrupta del rendimiento técnico sin causa física aparente"
+  }
+ ],
+ "analisis_cualitativo": [
+  {
+   "id": "A",
+   "pregunta": "Describe brevemente el estado psicológico general del tenista durante el partido (motivación, energía, gestión emocional)"
+  },
+  {
+   "id": "B",
+   "pregunta": "¿En qué momento del partido el estado psicológico del tenista afectó más significativamente su rendimiento técnico? ¿Qué observaste?"
+  },
+  {
+   "id": "C",
+   "pregunta": "¿Qué aspectos psicológicos deben priorizarse en el plan de entrenamiento antes de la próxima competición?"
+  },
+  {
+   "id": "D",
+   "pregunta": "Intervenciones realizadas durante los cambios de lado (indicaciones específicas dadas al tenista)"
+  }
+ ],
+ "ficha": {
+  "campos_documento": [
+   "entrenador",
+   "tenista",
+   "fecha",
+   "torneo",
+   "rival",
+   "superficie",
+   "resultado_final",
+   "partido_ganado"
+  ],
+  "nota": "En TennisMind el tenista y el rival se identifican por código seudónimo, no por nombre; el entrenador es el usuario autenticado."
+ },
+ "notas_por_item": true
+}
