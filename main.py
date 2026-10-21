@@ -15,6 +15,7 @@ from database import Base, engine
 from db_models import Usuario
 from inferencia import (META_PSI, META_SET, EvaluacionPsicologicaInput,
                         TelemetriaSetInput, estimar_set, evaluar_psicologia)
+from combinada import LecturaCombinadaIn, lectura_combinada
 from items_instrumento import ClasificarItemsInput, evaluar_items
 from rutas_auth import router as auth_router
 from rutas_tenistas import router as tenistas_router
@@ -75,3 +76,9 @@ def estimar_probabilidad_set(data: TelemetriaSetInput, _: Usuario = Depends(usua
 def clasificar_por_items(data: ClasificarItemsInput, _: Usuario = Depends(usuario_actual)):
     puntajes, resultado = evaluar_items(data.respuestas, data.id_tenista)
     return {**resultado, "puntajes": puntajes}
+
+
+# RF-06: lectura combinada del estado psicológico (A) y la probabilidad del set (B). No guarda nada.
+@app.post("/api/recomendacion-combinada")
+def recomendacion_combinada(data: LecturaCombinadaIn, _: Usuario = Depends(usuario_actual)):
+    return lectura_combinada(data)

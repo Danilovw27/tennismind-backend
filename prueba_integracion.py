@@ -23,6 +23,21 @@ VAR_A_METRICA = {"Var_Ansiedad_Total": "ansiedad_total", "Var_Momentum_Neto": "m
                  "Var_Fortaleza_Total": "fortaleza_total", "Var_Concentracion_Total": "concentracion_total"}
 def respuestas_de(fila): return [int(fila[f"Item{n:02d}"]) for n in range(1, 31)]
 
+# --- RF-06: reglas de la lectura combinada (sin servidor) ---
+import combinada as cb
+def set_falso(diag, nivel="Alta"): return {"diagnostico_momentum": diag, "nivel_confiabilidad": nivel, "probabilidad_ganar_set_p1": 50.0}
+DIAGS = ["Favorable a Jugador 1", "Set equilibrado", "Favorable a Jugador 2"]
+todas = [cb.combinar(e, None, set_falso(d)) for e in cb.ESTADOS for d in DIAGS]
+chk("RF-06: 12 combinaciones dan lectura, recomendación y prioridad",
+    all(r["lectura"] and r["recomendacion_combinada"] and r["prioridad"] in ("Alta", "Media", "Baja") for r in todas))
+chk("RF-06: desventaja + estado frágil es prioridad Alta", cb.combinar("En riesgo", None, set_falso("Favorable a Jugador 2"))["prioridad"] == "Alta")
+chk("RF-06: ventaja + estado óptimo es prioridad Baja", cb.combinar("Óptimo", None, set_falso("Favorable a Jugador 1"))["prioridad"] == "Baja")
+chk("RF-06: estado Crítico siempre Alta y con nota", all(cb.combinar("Crítico", None, set_falso(d))["prioridad"] == "Alta" and cb.combinar("Crítico", None, set_falso(d))["notas"] for d in DIAGS))
+chk("RF-06: ventaja frágil difiere de ventaja sana", cb.combinar("En riesgo", None, set_falso(DIAGS[0]))["recomendacion_combinada"] != cb.combinar("Estable", None, set_falso(DIAGS[0]))["recomendacion_combinada"])
+baja = cb.combinar("Estable", None, set_falso("Muestra insuficiente (menos de 10 puntos jugados)", "Baja"))
+chk("RF-06: con confiabilidad Baja no se usa la lectura del set", "confiable" in baja["lectura"] and baja["prioridad"] == "Baja")
+chk("RF-06: momentum neto <= -1 agrega nota", len(cb.combinar("Estable", -1.5, set_falso(DIAGS[1]))["notas"]) == 1 and cb.combinar("Estable", 0.5, set_falso(DIAGS[1]))["notas"] == [])
+
 # --- RF-01 (a): los 30 ítems quedan asignados exactamente una vez ---
 asignados = [i["numero"] for i in ITEMS_JSON]
 chk("items.json: ítems 1..30 sin repetir ni faltar", sorted(asignados) == list(range(1, 31)))
@@ -104,6 +119,18 @@ with TestClient(main.app) as c:
     chk("ítems de otro entrenador 404", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones-items", headers=h2, json={"respuestas": R30}).status_code == 404)
     chk("ítems con respuestas incompletas no se guardan", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones-items", headers=h1, json={"respuestas": R30[:20]}).status_code == 422
         and len(c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json()) == 2)
+    # --- RF-06: endpoint de lectura combinada ---
+    T30 = {"puntos_totales_disputados": 30, "p1_juegos": 3, "p2_juegos": 2}
+    cuerpo = {"estado_psicologico": "En riesgo", "momentum_neto": -1.5, "telemetria": T30}
+    chk("combinada sin sesión 401", c.post("/api/recomendacion-combinada", json=cuerpo).status_code == 401)
+    chk("combinada estado inválido 422", c.post("/api/recomendacion-combinada", headers=h1, json=dict(cuerpo, estado_psicologico="Feliz")).status_code == 422)
+    chk("combinada telemetría incoherente 422", c.post("/api/recomendacion-combinada", headers=h1, json=dict(cuerpo, telemetria={"p1_break_points_ganados": 3, "p1_break_points_totales": 1})).status_code == 422)
+    r = c.post("/api/recomendacion-combinada", headers=h1, json=cuerpo); d = r.json()
+    ref = c.post("/api/partido/probabilidad-set", headers=h1, json=T30).json()
+    chk("combinada 200 y usa el mismo resultado del set", r.status_code == 200 and d["fuentes"]["diagnostico_set"] == ref["diagnostico_momentum"]
+        and d["fuentes"]["probabilidad_ganar_set_p1"] == ref["probabilidad_ganar_set_p1"] and d["recomendacion_combinada"] and d["notas"])
+    r = c.post("/api/recomendacion-combinada", headers=h1, json=dict(cuerpo, telemetria={"puntos_totales_disputados": 5}))
+    chk("combinada con pocos puntos: confiabilidad Baja", r.status_code == 200 and r.json()["fuentes"]["nivel_confiabilidad"] == "Baja")
     # --- aislamiento entre entrenadores y admin ---
     chk("otro entrenador no ve al jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2).status_code==404)
     chk("otro entrenador no puede evaluar (404)", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2, json=P).status_code==404)
