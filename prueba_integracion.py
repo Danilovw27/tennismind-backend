@@ -1,5 +1,7 @@
 import os, sqlite3
 os.environ.update(DATABASE_URL="sqlite:///./prueba.db", SECRET_KEY="x"*48, CODIGO_INVITACION="invitame", ADMIN_EMAIL="admin@ejemplo.com")
+if os.path.exists("prueba.db"):
+    os.remove("prueba.db")  # empezar siempre con una base limpia
 from fastapi.testclient import TestClient
 import main
 from sqlalchemy import text
@@ -8,6 +10,29 @@ from database import engine
 def chk(nombre, cond):
     print(("OK  " if cond else "FALLA"), nombre); 
     assert cond, nombre
+
+import csv, json
+from pathlib import Path
+import items_instrumento as ii
+
+AQUI = Path(__file__).parent
+ITEMS_JSON = json.load(open(AQUI / "items.json", encoding="utf-8"))["items"]
+PARIDAD = list(csv.DictReader(open(AQUI / "paridad_items.csv", encoding="utf-8")))
+TOL = 0.01 + 1e-9
+VAR_A_METRICA = {"Var_Ansiedad_Total": "ansiedad_total", "Var_Momentum_Neto": "momentum_neto",
+                 "Var_Fortaleza_Total": "fortaleza_total", "Var_Concentracion_Total": "concentracion_total"}
+def respuestas_de(fila): return [int(fila[f"Item{n:02d}"]) for n in range(1, 31)]
+
+# --- RF-01 (a): los 30 ítems quedan asignados exactamente una vez ---
+asignados = [i["numero"] for i in ITEMS_JSON]
+chk("items.json: ítems 1..30 sin repetir ni faltar", sorted(asignados) == list(range(1, 31)))
+por_puntaje = {}
+for it in ITEMS_JSON: por_puntaje.setdefault(it["puntaje"], []).append(it["numero"])
+chk("items.json: los 10 puntajes existen y no se comparten ítems",
+    set(por_puntaje) == set(ii.PUNTAJES) and sorted(n for v in por_puntaje.values() for n in v) == list(range(1, 31)))
+chk("items.json: ningún ítem inverso (ítem 27 en positivo)", not any(i["inverso"] for i in ITEMS_JSON))
+chk("módulo de ítems: mismos grupos que items.json",
+    {k: [i["numero"] for i in ii.ITEMS if i["puntaje"] == k] for k in ii.PUNTAJES} == por_puntaje)
 
 with TestClient(main.app) as c:
     # --- salud (público) y cálculo (requiere sesión) ---
@@ -50,6 +75,35 @@ with TestClient(main.app) as c:
     r=c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1, json=P); chk("evaluación guardada 201", r.status_code==201 and r.json()["estado_psicologico"]=="Óptimo")
     chk("evaluación fuera de rango 422", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1, json=dict(P,score_ansiedad_cog=6)).status_code==422)
     lst=c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json(); chk("historial con 1 evaluación", len(lst)==1 and lst[0]["modelo_version"]=="v3")
+    # --- RF-01: 30 ítems ---
+    F = PARIDAD[0]; R30 = respuestas_de(F)
+    chk("ítems sin sesión 401", c.post("/api/evaluacion/clasificar-items", json={"respuestas": R30}).status_code == 401)
+    chk("ítems 29 respuestas 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": R30[:29]}).status_code == 422)
+    chk("ítems 31 respuestas 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": R30 + [3]}).status_code == 422)
+    chk("ítems valor 6 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": R30[:29] + [6]}).status_code == 422)
+    chk("ítems valor 0 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": [0] + R30[1:]}).status_code == 422)
+    chk("ítems valor decimal 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": [3.5] + R30[1:]}).status_code == 422)
+    chk("ítems valor booleano 422", c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": [True] + R30[1:]}).status_code == 422)
+    # (b) paridad: cada fila de paridad_items.csv reproduce los Score_* y Var_* esperados
+    for k, fila in enumerate(PARIDAD, 1):
+        r = c.post("/api/evaluacion/clasificar-items", headers=h1, json={"respuestas": respuestas_de(fila)})
+        ok = r.status_code == 200
+        if ok:
+            d = r.json()
+            ok = all(abs(d["puntajes"][ii.PUNTAJES[sc]] - float(fila[sc])) <= TOL for sc in ii.PUNTAJES)
+            ok = ok and all(abs(d["metricas_consolidadas"][m] - float(fila[v])) <= TOL for v, m in VAR_A_METRICA.items())
+        chk(f"paridad fila {k}: Score_* y Var_* iguales al CSV", ok)
+    chk("endpoint de 10 puntajes sigue activo", c.post("/api/evaluacion/clasificar", headers=h1, json=P).status_code == 200)
+    chk("ítems sin consentimiento 403", c.post(f"/api/tenistas/{c.post('/api/tenistas', headers=h1, json={'codigo':'T03','anio_nacimiento':1995}).json()['id']}/evaluaciones-items", headers=h1, json={"respuestas": R30}).status_code == 403)
+    r = c.post(f"/api/tenistas/{adulto['id']}/evaluaciones-items", headers=h1, json={"respuestas": R30})
+    chk("ítems guardados 201", r.status_code == 201 and "estado_psicologico" in r.json())
+    lst = c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json()
+    guardado = lst[0]["puntajes"]
+    chk("las 30 respuestas quedan en puntajes['items']", guardado.get("items") == R30 and len(lst) == 2)
+    chk("puntajes calculados guardados junto a los ítems", all(abs(guardado[ii.PUNTAJES[sc]] - float(F[sc])) <= TOL for sc in ii.PUNTAJES))
+    chk("ítems de otro entrenador 404", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones-items", headers=h2, json={"respuestas": R30}).status_code == 404)
+    chk("ítems con respuestas incompletas no se guardan", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones-items", headers=h1, json={"respuestas": R30[:20]}).status_code == 422
+        and len(c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h1).json()) == 2)
     # --- aislamiento entre entrenadores y admin ---
     chk("otro entrenador no ve al jugador (404)", c.get(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2).status_code==404)
     chk("otro entrenador no puede evaluar (404)", c.post(f"/api/tenistas/{adulto['id']}/evaluaciones", headers=h2, json=P).status_code==404)

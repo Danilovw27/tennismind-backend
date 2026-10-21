@@ -1,0 +1,257 @@
+{
+ "instrumento": "Instrumento 1 (tenista), 30 ítems",
+ "escala": {
+  "min": 1,
+  "max": 5,
+  "etiquetas": {
+   "1": "Nunca",
+   "5": "Siempre"
+  }
+ },
+ "fuente": "TennisMindfinal.docx (matriz de operacionalización y validación por expertos)",
+ "puntaje_es": "promedio simple de sus ítems",
+ "items": [
+  {
+   "numero": 1,
+   "texto": "Tengo pensamientos negativos sobre cómo me irá en el partido.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "inverso": false
+  },
+  {
+   "numero": 2,
+   "texto": "Siento miedo de cometer errores decisivos durante el juego.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "inverso": false
+  },
+  {
+   "numero": 3,
+   "texto": "Anticipo resultados negativos antes de comenzar a jugar.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "inverso": false
+  },
+  {
+   "numero": 4,
+   "texto": "Me cuesta mantener la atención en mi estrategia de juego.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "inverso": false
+  },
+  {
+   "numero": 5,
+   "texto": "Me distraigo con facilidad pensando en factores externos al partido.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Cognitiva",
+   "puntaje": "Score_AnsiedadCog",
+   "inverso": false
+  },
+  {
+   "numero": 6,
+   "texto": "Siento tensión muscular significativa antes de iniciar el partido.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "inverso": false
+  },
+  {
+   "numero": 7,
+   "texto": "Percibo mi frecuencia cardíaca elevada antes de salir a la pista.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "inverso": false
+  },
+  {
+   "numero": 8,
+   "texto": "Experimento dificultad para respirar con normalidad antes del partido.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Ansiedad Somática",
+   "puntaje": "Score_AnsiedadSom",
+   "inverso": false
+  },
+  {
+   "numero": 9,
+   "texto": "Me siento seguro/a de mis habilidades técnicas antes de jugar.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Autoconfianza",
+   "puntaje": "Score_Autoconfianza",
+   "inverso": false
+  },
+  {
+   "numero": 10,
+   "texto": "Creo que tengo capacidad real de ganar el partido de hoy.",
+   "variable": "Ansiedad Competitiva",
+   "dimension": "Autoconfianza",
+   "puntaje": "Score_Autoconfianza",
+   "inverso": false
+  },
+  {
+   "numero": 11,
+   "texto": "Siento que estoy dominando el intercambio de golpes en este momento.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "inverso": false
+  },
+  {
+   "numero": 12,
+   "texto": "Confío en que puedo mantener la ventaja durante los próximos puntos.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "inverso": false
+  },
+  {
+   "numero": 13,
+   "texto": "Noto un aumento de energía después de ganar puntos consecutivos.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "inverso": false
+  },
+  {
+   "numero": 14,
+   "texto": "Siento deseo de atacar y asumir riesgos en el siguiente punto.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Positivo",
+   "puntaje": "Score_MomentumPos",
+   "inverso": false
+  },
+  {
+   "numero": 15,
+   "texto": "Siento que mi rival está dominando el desarrollo del juego.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "inverso": false
+  },
+  {
+   "numero": 16,
+   "texto": "Dudo de la estrategia que estoy utilizando en este momento.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "inverso": false
+  },
+  {
+   "numero": 17,
+   "texto": "Noto una disminución de energía después de perder puntos consecutivos.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "inverso": false
+  },
+  {
+   "numero": 18,
+   "texto": "Tiendo a jugar de forma conservadora para evitar cometer más errores.",
+   "variable": "Momentum Psicológico",
+   "dimension": "Momentum Negativo",
+   "puntaje": "Score_MomentumNeg",
+   "inverso": false
+  },
+  {
+   "numero": 19,
+   "texto": "Me recupero emocionalmente con rapidez tras cometer errores o dobles faltas.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Resiliencia",
+   "puntaje": "Score_Resiliencia",
+   "inverso": false
+  },
+  {
+   "numero": 20,
+   "texto": "Logro estabilizarme mentalmente entre punto y punto después de un error.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Resiliencia",
+   "puntaje": "Score_Resiliencia",
+   "inverso": false
+  },
+  {
+   "numero": 21,
+   "texto": "Controlo mis expresiones de frustración visibles en la pista de juego.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Control Emocional",
+   "puntaje": "Score_CtrlEmocional",
+   "inverso": false
+  },
+  {
+   "numero": 22,
+   "texto": "Utilizo rutinas de autorregulación (respiración, frases clave) entre puntos.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Control Emocional",
+   "puntaje": "Score_CtrlEmocional",
+   "inverso": false
+  },
+  {
+   "numero": 23,
+   "texto": "Mantuve mi nivel de esfuerzo incluso en los momentos más desfavorables.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Perseverancia",
+   "puntaje": "Score_Perseverancia",
+   "inverso": false
+  },
+  {
+   "numero": 24,
+   "texto": "Seguí combatiendo con convicción en situaciones de clara desventaja.",
+   "variable": "Fortaleza Mental",
+   "dimension": "Perseverancia",
+   "puntaje": "Score_Perseverancia",
+   "inverso": false
+  },
+  {
+   "numero": 25,
+   "texto": "Logro leer el juego de mi rival y anticipar sus movimientos.",
+   "variable": "Concentración",
+   "dimension": "Foco Atencional",
+   "puntaje": "Score_FocoAtencional",
+   "inverso": false
+  },
+  {
+   "numero": 26,
+   "texto": "Mantengo mi atención en la pelota y la trayectoria durante el intercambio.",
+   "variable": "Concentración",
+   "dimension": "Foco Atencional",
+   "puntaje": "Score_FocoAtencional",
+   "inverso": false
+  },
+  {
+   "numero": 27,
+   "texto": "Pude mantener mi concentración a pesar del ruido del público o las decisiones arbitrales.",
+   "variable": "Concentración",
+   "dimension": "Foco Atencional (distractores)",
+   "puntaje": "Score_FocoAtencional",
+   "inverso": false,
+   "texto_original_validado": "El ruido del público o las decisiones arbitrales afectaron mi concentración.",
+   "nota": "Reformulado en sentido positivo (decisión del equipo) para no requerir inversión; pendiente de aval de la asesora/expertos."
+  },
+  {
+   "numero": 28,
+   "texto": "Pude ignorar los distractores externos y centrarme en el siguiente punto.",
+   "variable": "Concentración",
+   "dimension": "Foco Atencional (distractores)",
+   "puntaje": "Score_FocoAtencional",
+   "inverso": false
+  },
+  {
+   "numero": 29,
+   "texto": "Apliqué de forma consistente mi rutina pre-saque durante todo el partido.",
+   "variable": "Concentración",
+   "dimension": "Rutinas de Concentración",
+   "puntaje": "Score_RutinasConc",
+   "inverso": false
+  },
+  {
+   "numero": 30,
+   "texto": "Usé palabras clave o imágenes mentales para mantenerme concentrado/a.",
+   "variable": "Concentración",
+   "dimension": "Rutinas de Concentración",
+   "puntaje": "Score_RutinasConc",
+   "inverso": false
+  }
+ ]
+}

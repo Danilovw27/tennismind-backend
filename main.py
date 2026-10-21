@@ -15,6 +15,7 @@ from database import Base, engine
 from db_models import Usuario
 from inferencia import (META_PSI, META_SET, EvaluacionPsicologicaInput,
                         TelemetriaSetInput, estimar_set, evaluar_psicologia)
+from items_instrumento import ClasificarItemsInput, evaluar_items
 from rutas_auth import router as auth_router
 from rutas_tenistas import router as tenistas_router
 from seguridad import usuario_actual
@@ -67,3 +68,10 @@ def clasificar_estado_psicologico(data: EvaluacionPsicologicaInput,
 @app.post("/api/partido/probabilidad-set")
 def estimar_probabilidad_set(data: TelemetriaSetInput, _: Usuario = Depends(usuario_actual)):
     return estimar_set(data)
+
+
+# RF-01: las 30 respuestas del instrumento (sin guardar); el endpoint de 10 puntajes se mantiene.
+@app.post("/api/evaluacion/clasificar-items")
+def clasificar_por_items(data: ClasificarItemsInput, _: Usuario = Depends(usuario_actual)):
+    puntajes, resultado = evaluar_items(data.respuestas, data.id_tenista)
+    return {**resultado, "puntajes": puntajes}

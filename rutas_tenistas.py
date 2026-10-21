@@ -17,6 +17,7 @@ from database import get_db
 from db_models import (Auditoria, Consentimiento, EvaluacionPsicologica, MedicionSet,
                        Partido, Tenista, Usuario)
 from inferencia import PuntajesPsicologicos, TelemetriaSetInput, estimar_set, evaluar_psicologia
+from items_instrumento import RespuestasItems, evaluar_items
 from seguridad import usuario_actual
 
 router = APIRouter(prefix="/api", tags=["Datos del jugador (requieren sesión)"])
@@ -149,14 +150,9 @@ def revocar_consentimiento(tenista_id: int, db: Session = Depends(get_db),
 
 
 # ------------------------------- Evaluaciones (Modelo A) -------------------------------
-@router.post("/tenistas/{tenista_id}/evaluaciones", status_code=201)
-def crear_evaluacion(tenista_id: int, puntajes: PuntajesPsicologicos,
-                     db: Session = Depends(get_db), usuario: Usuario = Depends(usuario_actual)):
-    t = _tenista_o_404(db, tenista_id, usuario)
-    _exigir_consentimiento(db, t.id)
-    r = evaluar_psicologia(puntajes, id_tenista=t.codigo)
+def _guardar_evaluacion(db: Session, usuario: Usuario, t: Tenista, puntajes: dict, r: dict) -> dict:
     ev = EvaluacionPsicologica(
-        tenista_id=t.id, puntajes=puntajes.model_dump(), estado=r["estado_psicologico"],
+        tenista_id=t.id, puntajes=puntajes, estado=r["estado_psicologico"],
         confianza=r["confianza_prediccion_pct"], probabilidades=r["probabilidades_por_clase_pct"],
         recomendacion=r["recomendacion_entrenador"], alerta=r["alerta_activa"],
         modelo_version=r["modelo_version"])
@@ -165,6 +161,27 @@ def crear_evaluacion(tenista_id: int, puntajes: PuntajesPsicologicos,
     _auditar(db, usuario, "crear_evaluacion", "evaluacion", ev.id)
     db.commit()
     return {"id": ev.id, "fecha": ev.creado_en, **r}
+
+
+@router.post("/tenistas/{tenista_id}/evaluaciones", status_code=201)
+def crear_evaluacion(tenista_id: int, puntajes: PuntajesPsicologicos,
+                     db: Session = Depends(get_db), usuario: Usuario = Depends(usuario_actual)):
+    t = _tenista_o_404(db, tenista_id, usuario)
+    _exigir_consentimiento(db, t.id)
+    r = evaluar_psicologia(puntajes, id_tenista=t.codigo)
+    return _guardar_evaluacion(db, usuario, t, puntajes.model_dump(), r)
+
+
+@router.post("/tenistas/{tenista_id}/evaluaciones-items", status_code=201)
+def crear_evaluacion_items(tenista_id: int, datos: RespuestasItems,
+                           db: Session = Depends(get_db), usuario: Usuario = Depends(usuario_actual)):
+    """RF-01: recibe las 30 respuestas. Se guardan en el JSON "puntajes" (clave "items"),
+    junto a los 10 puntajes calculados; no se crean columnas ni tablas."""
+    t = _tenista_o_404(db, tenista_id, usuario)
+    _exigir_consentimiento(db, t.id)
+    puntajes, r = evaluar_items(datos.respuestas, t.codigo)
+    guardado = _guardar_evaluacion(db, usuario, t, {**puntajes, "items": datos.respuestas}, r)
+    return {**guardado, "puntajes": puntajes}
 
 
 @router.get("/tenistas/{tenista_id}/evaluaciones")
